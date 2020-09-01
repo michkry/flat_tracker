@@ -1,0 +1,16 @@
+app_title=Idealista flat tracker
+header=Idealista flat tracker
+sender_email_label=Sender email:
+sender_email_pass_label=Sender email password:
+notification_email_label=Notification email:
+url_alias_label= Url alias:
+url_to_check_label=Url to track:
+add_url_btn=Add
+acc_btn=Accept
+cl_btn=Close
+rm_btn=Remove
+urls_table_header_0 = Url alias
+urls_table_header_1 = Url
+add_url_prompt_title=Add url to track
+start_btn=START TRACKING
+stop_btn=STOP TRACKING
