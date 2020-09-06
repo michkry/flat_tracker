@@ -142,6 +142,9 @@ def start_btn_click_event(event, btn):
     start_btn_pressed = not start_btn_pressed
     if start_btn_pressed:
         fc_service.update_email_config(dto)
+        ##
+        fc_service.consult_url("dfdsf")
+        ##
         btn.config(relief=SUNKEN, text=literals["stop_btn"])
         global th
         th = m.TrackingThread(5)

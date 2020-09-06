@@ -74,10 +74,11 @@ class Url (_Base):
 
 class Flat (_Base):
 
-    def __init__(self, id, flat_id, url_id, announcement_date):
+    def __init__(self, id, flat_id, url_id, href, announcement_date):
         _Base.__init__(self, id)
         self._flat_id = flat_id
         self._url_id = url_id
+        self._href = href
         self._announcement_date = announcement_date
 
     def get_flat_id(self):
@@ -85,6 +86,9 @@ class Flat (_Base):
 
     def get_url_id(self):
         return self._url_id
+
+    def get_href(self):
+        return self._href
 
     def get_announcement_date(self):
         return self._announcement_date
@@ -95,9 +99,17 @@ class Flat (_Base):
     def set_url_id(self, url_id):
         self._url_id = url_id
 
+    def set_href(self, href):
+        self._href = href
+
     def set_announcement_date(self, announcement_date):
         self._announcement_date = announcement_date
 
+    def __eq__(self, other):
+        if isinstance(other, Flat):
+            return self.get_flat_id() == other.get_flat_id()
+        else:
+            return False
 
 
 

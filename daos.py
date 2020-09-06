@@ -48,11 +48,16 @@ class UrlDao:
     _INSERT_TEMPLATE = "INSERT INTO url (url_alias, url, first_req_done) VALUES(?, ?, ?)"
     _GET_ALL_TEMPLATE = "SELECT id, url_alias, url, first_req_done FROM url"
     _DEL_BY_URL_A_TEMPLATE = "DELETE FROM url WHERE url_alias=?"
+    _UPDATE_TEMPLATE = "UPDATE url SET url_alias=?, url=?, first_req_done=? WHERE id=?"
 
     def insert(self, url):
         c = _conn.cursor()
         c.execute(self._INSERT_TEMPLATE, (url.get_url_alias(), url.get_url(), url.get_first_req_done()))
         _conn.commit()
+
+    def update(self, url):
+        c = _conn.cursor()
+        c.execute(self._UPDATE_TEMPLATE, (url.get_url_alias(), url.get_url(), url.get_first_req_done(), url.get_id(),))
 
     def delete_by_url_alias(self, url_alias):
         c = _conn.cursor()
@@ -67,6 +72,26 @@ class UrlDao:
         for row in query_result:
             url = Url(row[0], row[1], row[2], row[3])
             result.append(url)
+        return result
+
+class FlatDao:
+
+    _INSERT_LIST_TEMPLATE = "INSERT INTO flat (flat_id, url_id, announcement_date) VALUES(?, ?, ?)"
+    _GET_BY_URL_TEMPLATE = "SELECT id, flat_id, url_id, announcement_date FROM flat WHERE url_id=?"
+
+    def insert_list(self, flat_list):
+        c = _conn.cursor()
+        for flat in flat_list:
+            c.execute(self._INSERT_LIST_TEMPLATE, (flat.get_flat_id(), flat.get_url_id(), flat.get_announcement_date(),))
+
+    def get_by_url(self, url):
+        result = []
+        c = _conn.cursor()
+        c.execute(self._GET_BY_URL_TEMPLATE, (url.get_id(),))
+        query_result = c.fetchall()
+        for row in query_result:
+            flat = Flat(row[0], row[1], row[2], None, row[3])
+            result.append(flat)
         return result
 
 
