@@ -58,6 +58,7 @@ class UrlDao:
     def update(self, url):
         c = _conn.cursor()
         c.execute(self._UPDATE_TEMPLATE, (url.get_url_alias(), url.get_url(), url.get_first_req_done(), url.get_id(),))
+        _conn.commit()
 
     def delete_by_url_alias(self, url_alias):
         c = _conn.cursor()
@@ -82,7 +83,9 @@ class FlatDao:
     def insert_list(self, flat_list):
         c = _conn.cursor()
         for flat in flat_list:
+            print(str(flat))
             c.execute(self._INSERT_LIST_TEMPLATE, (flat.get_flat_id(), flat.get_url_id(), flat.get_announcement_date(),))
+        _conn.commit()
 
     def get_by_url(self, url):
         result = []

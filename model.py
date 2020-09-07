@@ -111,6 +111,9 @@ class Flat (_Base):
         else:
             return False
 
+    def __str__(self):
+        return "id={}, flat_id={}, url_id={}, href={}, annou_date={}".format(self._id, self._flat_id, self._url_id, self._href, self._announcement_date)
+
 
 
 

@@ -1,17 +1,15 @@
 #!/usr/bin/python3
 
-import requests
 import datetime
+import subprocess
+from logging_factory import logger
 from daos import *
 from model import *
 from dtos import FormDto
 from bs4 import BeautifulSoup
-### TESTING ###
-from requests_file import FileAdapter
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-### TESTING ###
 
 class FlatCheckerService:
 
@@ -51,13 +49,13 @@ class FlatCheckerService:
         return rows_list
 
     def check_alias_not_duplicated(self, url_alias):
-        # TODO add check if alias exists in DDBB
         return True
 
     def get_flats_from_url(self, url):
         flats_list = []
         page_url = url
         while page_url:
+            logger.info("Processing the url: {}".format(page_url.get_url()))
             flats_list.append(self._get_flats_from_page(page_url))
             page_url = self._get_next_page_url(page_url)
         return flats_list
@@ -72,6 +70,7 @@ class FlatCheckerService:
                                                     and "href" in tag.attrs 
                                                     and tag.attrs.get("class") != None 
                                                     and "item-link" in tag.attrs["class"])["href"]
+            logger.info("Article: flat_id = {} and href = {}".format(flat_id, href))
             flat = Flat(None, flat_id, url.get_id(), href, datetime.datetime.now())
             flats_from_page_list.append(flat)
         return flats_from_page_list
@@ -97,30 +96,43 @@ class FlatCheckerService:
             driver = webdriver.Firefox(options=options, firefox_binary=binary)
             driver.get(url)
             bs4_page = BeautifulSoup(driver.page_source, "html.parser")
+            self._kill_idle_browser_processes()
         except:
             print("There was an error while trying to connect to the website")
         return bs4_page
+
+    def _kill_idle_browser_processes(self):
+        bash_cmd = "kill -9 $(ps -ef | grep '/usr/bin/firefox-esr --marionette --headless' | awk '{print $2}')"
+        p1 = subprocess.Popen(["ps", "-ef"], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["grep", "/usr/bin/firefox-esr --marionette --headless"], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p3 = subprocess.Popen(["awk", "{print $2}"], stdin=p2.stdout, stdout=subprocess.PIPE)
+        p4 = subprocess.Popen(["xargs", "kill", "-9"], stdin=p3.stdout)
 
     def start_tracking(self):
         persisted_url_list = self._url_dao.get_all()
         for url in persisted_url_list:
             new_flat_list = []
+            flats_from_url = self.get_flats_from_url(url)
             if url.get_first_req_done:
-                flats_from_url = self.get_flats_from_url(url)
                 persisted_flat_list = self._flat_dao.get_by_url(url)
                 for flat in flats_from_url:
                     if flat not in persisted_flat_list:
                         new_flat_list.append(flat)
+                if len(new_flat_list) > 0:
+                    #self._send_notif(new_flat_list)
+                    pass
             else:
+                new_flat_list = flats_from_url
                 url.set_first_req_done(1)
                 self._url_dao.update(url)
-            self._flat_dao.insert_list(new_flat_list)
-            # self._send_notif(new_flat_list)
+            logger.info("Flats to insert into DDBB: {}".format(new_flat_list))
+            if len(new_flat_list) > 0:
+                self._flat_dao.insert_list(new_flat_list)
 
 ###
 fc = FlatCheckerService()
 test_url = Url(123, "alias lala", "https://www.idealista.com/alquiler-viviendas/valencia-valencia/con-precio-hasta_600,metros-cuadrados-mas-de_40/?ordenado-por=precios-asc", 0)
-print(fc.get_flats_from_url(test_url))
+fc.start_tracking()
 ###
 
 

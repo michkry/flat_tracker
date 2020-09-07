@@ -143,7 +143,7 @@ def start_btn_click_event(event, btn):
     if start_btn_pressed:
         fc_service.update_email_config(dto)
         ##
-        fc_service.consult_url("dfdsf")
+        #fc_service.start_tracking()
         ##
         btn.config(relief=SUNKEN, text=literals["stop_btn"])
         global th
