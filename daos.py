@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sqlite3
+from logging_factory import logger
 from os.path import isfile
 from model import *
 
@@ -56,6 +57,7 @@ class UrlDao:
         _conn.commit()
 
     def update(self, url):
+        logger.info("Updating the url: {}".format(str(url)))
         c = _conn.cursor()
         c.execute(self._UPDATE_TEMPLATE, (url.get_url_alias(), url.get_url(), url.get_first_req_done(), url.get_id(),))
         _conn.commit()
@@ -79,12 +81,18 @@ class FlatDao:
 
     _INSERT_LIST_TEMPLATE = "INSERT INTO flat (flat_id, url_id, announcement_date) VALUES(?, ?, ?)"
     _GET_BY_URL_TEMPLATE = "SELECT id, flat_id, url_id, announcement_date FROM flat WHERE url_id=?"
+    _DEL_BY_URL_ALIAS = "DELETE FROM flat WHERE url_id IN (SELECT id FROM url WHERE url_alias=?)"
 
     def insert_list(self, flat_list):
         c = _conn.cursor()
         for flat in flat_list:
-            print(str(flat))
+            logger.info(flat)
             c.execute(self._INSERT_LIST_TEMPLATE, (flat.get_flat_id(), flat.get_url_id(), flat.get_announcement_date(),))
+        _conn.commit()
+
+    def delete_by_url_alias(self, url_alias):
+        c = _conn.cursor()
+        c.execute(self._DEL_BY_URL_ALIAS, (url_alias,))
         _conn.commit()
 
     def get_by_url(self, url):

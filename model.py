@@ -72,6 +72,9 @@ class Url (_Base):
     def set_first_req_done(self, first_req_done):
         self._first_req_done = first_req_done
 
+    def __str__(self):
+        return "id={}, url_alias={}, url={}, first_req_done={}".format(self._id, self._url_alias, self._url, self._first_req_done)
+
 class Flat (_Base):
 
     def __init__(self, id, flat_id, url_id, href, announcement_date):
