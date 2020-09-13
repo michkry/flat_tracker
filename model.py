@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from enums import *
+
 class _Base:
     def __init__(self, id):
         self._id = id
@@ -77,12 +79,15 @@ class Url (_Base):
 
 class Flat (_Base):
 
-    def __init__(self, id, flat_id, url_id, href, announcement_date):
+    def __init__(self, id, flat_id, url_id, announcement_date, href, title, price, email_status):
         _Base.__init__(self, id)
         self._flat_id = flat_id
         self._url_id = url_id
-        self._href = href
         self._announcement_date = announcement_date
+        self._href = href
+        self._title = title
+        self._price = price
+        self._email_status = email_status
 
     def get_flat_id(self):
         return self._flat_id
@@ -90,11 +95,20 @@ class Flat (_Base):
     def get_url_id(self):
         return self._url_id
 
+    def get_announcement_date(self):
+        return self._announcement_date
+
     def get_href(self):
         return self._href
 
-    def get_announcement_date(self):
-        return self._announcement_date
+    def get_title(self):
+        return self._title
+
+    def get_price(self):
+        return self._price
+
+    def get_email_status(self):
+        return self._email_status
 
     def set_flat_id(self, flat_id):
         self._flat_id = flat_id
@@ -102,11 +116,20 @@ class Flat (_Base):
     def set_url_id(self, url_id):
         self._url_id = url_id
 
+    def set_announcement_date(self, announcement_date):
+        self._announcement_date = announcement_date
+
     def set_href(self, href):
         self._href = href
 
-    def set_announcement_date(self, announcement_date):
-        self._announcement_date = announcement_date
+    def set_title(self, title):
+        self._title = title
+
+    def set_price(self, price):
+        self._price = price
+
+    def set_email_status(self, email_status):
+        self._email_status = email_status
 
     def __eq__(self, other):
         if isinstance(other, Flat):
@@ -115,48 +138,4 @@ class Flat (_Base):
             return False
 
     def __str__(self):
-        return "id={}, flat_id={}, url_id={}, href={}, annou_date={}".format(self._id, self._flat_id, self._url_id, self._href, self._announcement_date)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return "id={}, flat_id={}, url_id={}, annou_date={}, href={}, title={}, price={}, email_status={}".format(self._id, self._flat_id, self._url_id, self._announcement_date, self._href, self._title, self._price, self._email_status)

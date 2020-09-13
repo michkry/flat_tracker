@@ -5,6 +5,7 @@ import subprocess
 from logging_factory import logger
 from daos import *
 from model import *
+from enums import *
 from dtos import FormDto
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -68,12 +69,16 @@ class FlatCheckerService:
             article_list = page_bs.find_all(lambda tag : tag.name == "article" and "data-adid" in tag.attrs)
             for article in article_list:
                 flat_id = article["data-adid"]
-                href = self._DOMAIN_NAME + article.find(lambda tag : tag.name == "a" 
+                a_tag = article.find(lambda tag : tag.name == "a" 
                                                         and "href" in tag.attrs 
                                                         and tag.attrs.get("class") != None 
-                                                        and "item-link" in tag.attrs["class"])["href"]
-                logger.info("Article: flat_id = {} and href = {}".format(flat_id, href))
-                flat = Flat(None, flat_id, url.get_id(), href, datetime.datetime.now())
+                                                        and "item-link" in tag.attrs["class"])
+                href = self._DOMAIN_NAME + a_tag["href"]
+                title = a_tag["title"]
+                price = int(article.find(lambda tag : tag.name == "div" and "price-row" in tag.attrs["class"]).find("span").contents[0])
+                logger.info("Article: flat_id = {}, href = {}, price = {}".format(flat_id, href, price))
+                # email_status value is 2 because later on we will check if the flat is new or its price went down and only in these cases we will send a notification
+                flat = Flat(None, flat_id, url.get_id(), datetime.datetime.now(), href, title, price, EmailStatus.EMAIL_SENT.value)
                 flats_from_page_list.append(flat)
         return flats_from_page_list
 
@@ -114,27 +119,25 @@ class FlatCheckerService:
         persisted_url_list = self._url_dao.get_all()
         for url in persisted_url_list:
             new_flat_list = []
+            lowered_flat_list = []
             flats_from_url = self.get_flats_from_url(url)
-            if url.get_first_req_done():
-                logger.info("The url has been already processed in the past")
-                persisted_flat_list = self._flat_dao.get_by_url(url)
-                for flat in flats_from_url:
-                    if flat not in persisted_flat_list:
-                        new_flat_list.append(flat)
-                if len(new_flat_list) > 0:
-                    #self._send_notif(new_flat_list)
-                    pass
-            else:
-                logger.info("The url is being processed for the first time")
-                new_flat_list = flats_from_url
+            pers_flat_id_price_dict = self._flat_dao.get_flat_id_price_dict()
+            for flat in flats_from_url:
+                previous_price = pers_flat_id_price_dict.get(flat.get_flat_id())
+                if previous_price == None:
+                    if url.get_first_req_done():
+                        flat.set_email_status(EmailStatus.NEW_FLAT.value)
+                    new_flat_list.append(flat)
+                elif flat.get_price() < previous_price:
+                    flat.set_email_status(EmailStatus.LOWERED_FLAT.value)
+                    lowered_flat_list.append(flat)
+            if len(new_flat_list) > 0:
+                #self._send_notif(new_flat_list)
+                pass
+            if url.get_first_req_done() == 0:
                 url.set_first_req_done(1)
                 self._url_dao.update(url)
             if len(new_flat_list) > 0:
                 self._flat_dao.insert_list(new_flat_list)
-
-###
-#fc = FlatCheckerService()
-#test_url = Url(123, "alias lala", "https://www.idealista.com/alquiler-viviendas/valencia-valencia/con-precio-hasta_600,metros-cuadrados-mas-de_40/?ordenado-por=precios-asc", 0)
-#fc.start_tracking()
-###
-
+            if len(lowered_flat_list) > 0:
+                self._flat_dao.update_price(lowered_flat_list)

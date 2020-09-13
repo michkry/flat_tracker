@@ -22,5 +22,9 @@ CREATE TABLE flat (
 	flat_id VARCHAR(50) NOT NULL,
 	url_id INTEGER NOT NULL,
 	announcement_date DATE,
+	href TEXT NOT NULL,
+	title VARCHAR(500) NOT NULL,
+	price NUMBER(10, 2) NOT NULL,
+	email_status INTEGER NOT NULL,
 	CONSTRAINT fk_flat_url FOREIGN KEY (url_id) REFERENCES url(id)
 );

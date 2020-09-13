@@ -39,7 +39,7 @@ class EmailConfigDao:
         c = _conn.cursor()
         c.execute(self._GET_CONFIG_TEMPLATE)
         query_result = c.fetchone()
-        result = None
+        result = EmailConfig(None, None, None, None)
         if query_result:
             result = EmailConfig(query_result[0], query_result[1], query_result[2], query_result[3])
         return result
@@ -79,15 +79,24 @@ class UrlDao:
 
 class FlatDao:
 
-    _INSERT_LIST_TEMPLATE = "INSERT INTO flat (flat_id, url_id, announcement_date) VALUES(?, ?, ?)"
-    _GET_BY_URL_TEMPLATE = "SELECT id, flat_id, url_id, announcement_date FROM flat WHERE url_id=?"
+    _INSERT_LIST_TEMPLATE = "INSERT INTO flat (flat_id, url_id, announcement_date, href, title, price, email_status) VALUES(?, ?, ?, ?, ?, ?, ?)"
+    _UPDATE_PRICE_TEMPLATE = "UPDATE flat SET price=?, email_status=? WHERE flat_id = ?"
+    _GET_BY_URL_TEMPLATE = "SELECT id, flat_id, url_id, announcement_date, href, title, price, email_status FROM flat WHERE url_id=?"
     _DEL_BY_URL_ALIAS = "DELETE FROM flat WHERE url_id IN (SELECT id FROM url WHERE url_alias=?)"
+    _GET_FLAT_ID_PRICE_DICT = "SELECT flat_id, price FROM flat"
 
     def insert_list(self, flat_list):
         c = _conn.cursor()
         for flat in flat_list:
             logger.info(flat)
-            c.execute(self._INSERT_LIST_TEMPLATE, (flat.get_flat_id(), flat.get_url_id(), flat.get_announcement_date(),))
+            c.execute(self._INSERT_LIST_TEMPLATE, (flat.get_flat_id(), flat.get_url_id(), flat.get_announcement_date(), flat.get_href(), flat.get_title(), flat.get_price(), flat.get_email_status(),))
+        _conn.commit()
+
+    def update_price(self, flat_list):
+        c = _conn.cursor()
+        for flat in flat_list:
+            logger.info(flat)
+            c.execute(self._UPDATE_PRICE_TEMPLATE, (flat.get_price(), flat.get_email_status(), flat.get_flat_id(),))
         _conn.commit()
 
     def delete_by_url_alias(self, url_alias):
@@ -95,13 +104,22 @@ class FlatDao:
         c.execute(self._DEL_BY_URL_ALIAS, (url_alias,))
         _conn.commit()
 
+    def get_flat_id_price_dict(self):
+        result = {}
+        c = _conn.cursor()
+        c.execute(self._GET_FLAT_ID_PRICE_DICT)
+        query_result = c.fetchall()
+        for row in query_result:
+            result[row[0]] = row[1]
+        return result
+
     def get_by_url(self, url):
         result = []
         c = _conn.cursor()
         c.execute(self._GET_BY_URL_TEMPLATE, (url.get_id(),))
         query_result = c.fetchall()
         for row in query_result:
-            flat = Flat(row[0], row[1], row[2], None, row[3])
+            flat = Flat(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
             result.append(flat)
         return result
 
